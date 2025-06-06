@@ -43,9 +43,6 @@
 					"name": "join1"
 				},
 				{
-					"name": "derivedColumn1"
-				},
-				{
 					"name": "join2"
 				}
 			],
@@ -91,8 +88,7 @@
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> join1",
-				"source2 derive(prd_id_new = substring(prd_id, 7, length(prd_id) - 5)) ~> derivedColumn1",
-				"join1, derivedColumn1 join(sls_prd_key == prd_id_new,",
+				"join1, source2 join(sls_prd_key == prd_id,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
