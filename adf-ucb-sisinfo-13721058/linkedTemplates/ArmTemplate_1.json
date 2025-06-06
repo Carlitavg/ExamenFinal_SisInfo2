@@ -358,6 +358,9 @@
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"folder": {
+					"name": "GOLD"
+				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
 					"sources": [
@@ -378,7 +381,11 @@
 							"name": "sink1"
 						}
 					],
-					"transformations": [],
+					"transformations": [
+						{
+							"name": "aggregate1"
+						}
+					],
 					"scriptLines": [
 						"source(output(",
 						"          cst_id as integer,",
@@ -393,7 +400,9 @@
 						"     validateSchema: false,",
 						"     isolationLevel: 'READ_UNCOMMITTED',",
 						"     format: 'table') ~> source1",
-						"source1 sink(allowSchemaDrift: true,",
+						"source1 aggregate(groupBy(cst_key),",
+						"     each(match(name!='cst_key'), $$ = first($$))) ~> aggregate1",
+						"aggregate1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
 						"          cst_id as integer,",
@@ -1046,6 +1055,56 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/GOLD_PL_DIM_CLIENTE')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "gold_df_dim_cliente",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "gold_df_dim_cliente",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continueOnError": true
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "GOLD"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/gold_df_dim_cliente')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/GOLD_PL_DIM_PRODUCTO')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1078,7 +1137,8 @@
 								"coreCount": 8,
 								"computeType": "General"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Fine",
+							"continueOnError": true
 						}
 					}
 				],
