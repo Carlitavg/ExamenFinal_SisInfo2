@@ -288,6 +288,115 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/silver_df_productos_completos')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "productos_cat_csv",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						},
+						{
+							"dataset": {
+								"referenceName": "productos_csv",
+								"type": "DatasetReference"
+							},
+							"name": "source2"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "silver_sql_productos_completos",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "derivedColumn1"
+						},
+						{
+							"name": "derivedColumn2"
+						},
+						{
+							"name": "join1"
+						},
+						{
+							"name": "derivedColumn3"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          ID as string,",
+						"          CAT as string,",
+						"          SUBCAT as string,",
+						"          MAINTENANCE as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> source1",
+						"source(output(",
+						"          prd_id as string,",
+						"          prd_key as string,",
+						"          prd_nm as string,",
+						"          prd_cost as string,",
+						"          prd_line as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> source2",
+						"source1 derive(ID = replace(ID, '_', '-')) ~> derivedColumn1",
+						"source2 derive(prd_key_new = substring(prd_key, 0, 5)) ~> derivedColumn2",
+						"derivedColumn1, derivedColumn2 join(ID == prd_key_new,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join1",
+						"join1 derive(prd_line = iif(isNull(prd_line),'SL',prd_line)) ~> derivedColumn3",
+						"derivedColumn3 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          prd_id as integer,",
+						"          prd_key as string,",
+						"          prd_nombre as string,",
+						"          prd_cost as decimal(18,0),",
+						"          linea as string,",
+						"          categoria as string,",
+						"          subcategoria as string,",
+						"          requiere_mantenimiento as boolean",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          prd_id,",
+						"          prd_key,",
+						"          prd_nombre = prd_nm,",
+						"          prd_cost,",
+						"          linea = prd_line,",
+						"          categoria = CAT,",
+						"          subcategoria = SUBCAT,",
+						"          requiere_mantenimiento = MAINTENANCE",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/BRONZE_PL_CLIENTES')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -629,6 +738,54 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/silver_df_clientes_completos')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SILVER_PL_PRODUCTOS_COMPLETOS')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "silver_df_productos_completos",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "silver_df_productos_completos",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"source2": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continueOnError": true
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/silver_df_productos_completos')]"
 			]
 		}
 	]
