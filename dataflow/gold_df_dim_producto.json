@@ -1,0 +1,67 @@
+{
+	"name": "gold_df_dim_producto",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "silver_sql_productos_completos",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "gold_sql_dim_producto",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          prd_id as integer,",
+				"          prd_key as string,",
+				"          prd_nombre as string,",
+				"          prd_cost as decimal(18,0),",
+				"          linea as string,",
+				"          categoria as string,",
+				"          subcategoria as string,",
+				"          requiere_mantenimiento as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> source1",
+				"source1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          prd_id as integer,",
+				"          nombre as string,",
+				"          categoria as string,",
+				"          subcategoria as string,",
+				"          requiere_mantenimiento as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          prd_id,",
+				"          nombre = prd_nombre,",
+				"          categoria,",
+				"          subcategoria,",
+				"          requiere_mantenimiento",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}
