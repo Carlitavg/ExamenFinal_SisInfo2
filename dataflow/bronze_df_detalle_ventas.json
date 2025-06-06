@@ -1,5 +1,5 @@
 {
-	"name": "bronze_df_productos",
+	"name": "bronze_df_detalle_ventas",
 	"properties": {
 		"folder": {
 			"name": "BRONZE"
@@ -9,7 +9,7 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "productos_csv",
+						"referenceName": "detalle_ventas_csv",
 						"type": "DatasetReference"
 					},
 					"name": "source1"
@@ -18,7 +18,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "bronze_sql_productos",
+						"referenceName": "bronze_sql_detalle_ventas",
 						"type": "DatasetReference"
 					},
 					"name": "sink1"
@@ -27,11 +27,14 @@
 			"transformations": [],
 			"scriptLines": [
 				"source(output(",
-				"          prd_id as string,",
-				"          prd_key as string,",
-				"          prd_nm as string,",
-				"          prd_cost as string,",
-				"          prd_line as string",
+				"          sls_ord_num as string,",
+				"          sls_prd_key as string,",
+				"          sls_cust_id as string,",
+				"          sls_order_dt as string,",
+				"          sls_ship_dt as string,",
+				"          sls_sales as string,",
+				"          sls_quantity as string,",
+				"          sls_price as string",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
@@ -39,11 +42,14 @@
 				"source1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
-				"          prd_id as integer,",
-				"          prd_key as string,",
-				"          prd_nm as string,",
-				"          prd_cost as decimal(18,0),",
-				"          prd_line as string",
+				"          sls_ord_num as string,",
+				"          sls_prd_key as string,",
+				"          sls_cust_id as integer,",
+				"          sls_order_dt as string,",
+				"          sls_ship_dt as string,",
+				"          sls_sales as decimal(18,0),",
+				"          sls_quantity as integer,",
+				"          sls_price as decimal(18,0)",
 				"     ),",
 				"     deletable:false,",
 				"     insertable:true,",
@@ -55,11 +61,14 @@
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
-				"          prd_id,",
-				"          prd_key,",
-				"          prd_nm,",
-				"          prd_cost,",
-				"          prd_line",
+				"          sls_ord_num,",
+				"          sls_prd_key,",
+				"          sls_cust_id,",
+				"          sls_order_dt,",
+				"          sls_ship_dt,",
+				"          sls_sales,",
+				"          sls_quantity,",
+				"          sls_price",
 				"     )) ~> sink1"
 			]
 		}
