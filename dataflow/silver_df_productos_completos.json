@@ -9,14 +9,14 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "productos_cat_csv",
+						"referenceName": "bronze_sql_productos_cat",
 						"type": "DatasetReference"
 					},
 					"name": "source1"
 				},
 				{
 					"dataset": {
-						"referenceName": "productos_csv",
+						"referenceName": "bronze_sql_productos",
 						"type": "DatasetReference"
 					},
 					"name": "source2"
@@ -54,17 +54,19 @@
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> source1",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> source1",
 				"source(output(",
-				"          prd_id as string,",
+				"          prd_id as integer,",
 				"          prd_key as string,",
 				"          prd_nm as string,",
-				"          prd_cost as string,",
+				"          prd_cost as decimal(18,0),",
 				"          prd_line as string",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> source2",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> source2",
 				"source1 derive(ID = replace(ID, '_', '-')) ~> derivedColumn1",
 				"source2 derive(prd_key_new = substring(prd_key, 0, 5)) ~> derivedColumn2",
 				"derivedColumn1, derivedColumn2 join(ID == prd_key_new,",
