@@ -13,8 +13,7 @@
 		"schema": [
 			{
 				"name": "prd_id",
-				"type": "int",
-				"precision": 10
+				"type": "varchar"
 			},
 			{
 				"name": "nombre",

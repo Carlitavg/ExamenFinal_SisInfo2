@@ -24,7 +24,11 @@
 					"name": "sink1"
 				}
 			],
-			"transformations": [],
+			"transformations": [
+				{
+					"name": "aggregate1"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
 				"          prd_id as integer,",
@@ -40,10 +44,12 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> source1",
-				"source1 sink(allowSchemaDrift: true,",
+				"source1 aggregate(groupBy(prd_key),",
+				"     each(match(name != 'prd_key'), $$ = first($$))) ~> aggregate1",
+				"aggregate1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
-				"          prd_id as integer,",
+				"          prd_id as string,",
 				"          nombre as string,",
 				"          categoria as string,",
 				"          subcategoria as string,",
@@ -58,7 +64,7 @@
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
-				"          prd_id,",
+				"          prd_id = prd_key,",
 				"          nombre = prd_nombre,",
 				"          categoria,",
 				"          subcategoria,",

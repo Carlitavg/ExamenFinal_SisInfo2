@@ -1,0 +1,74 @@
+{
+	"name": "gold_df_hechos_ventas",
+	"properties": {
+		"folder": {
+			"name": "GOLD"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "gold_sql_dim_cliente",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				},
+				{
+					"dataset": {
+						"referenceName": "gold_sql_dim_producto",
+						"type": "DatasetReference"
+					},
+					"name": "source2"
+				},
+				{
+					"dataset": {
+						"referenceName": "bronze_sql_detalle_ventas",
+						"type": "DatasetReference"
+					},
+					"name": "source3"
+				}
+			],
+			"sinks": [],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          cst_id as integer,",
+				"          nombre_completo as string,",
+				"          pais as string,",
+				"          estado_civil as string,",
+				"          genero as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> source1",
+				"source(output(",
+				"          prd_id as string,",
+				"          nombre as string,",
+				"          categoria as string,",
+				"          subcategoria as string,",
+				"          requiere_mantenimiento as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> source2",
+				"source(output(",
+				"          sls_ord_num as string,",
+				"          sls_prd_key as string,",
+				"          sls_cust_id as integer,",
+				"          sls_order_dt as string,",
+				"          sls_ship_dt as string,",
+				"          sls_sales as decimal(18,0),",
+				"          sls_quantity as integer,",
+				"          sls_price as decimal(18,0)",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> source3"
+			]
+		}
+	}
+}
