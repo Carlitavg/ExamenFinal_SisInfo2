@@ -433,6 +433,58 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/GOLD_PL_HECHOS_VENTAS')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "gold_df_hechos_ventas",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "gold_df_hechos_ventas",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"source2": {},
+									"source3": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continueOnError": true
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "GOLD"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/gold_df_hechos_ventas')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/SILVER_PL_CLIENTES_COMPLETOS')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1972,7 +2024,7 @@
 						"     isolationLevel: 'READ_UNCOMMITTED',",
 						"     format: 'table') ~> source1",
 						"source1 aggregate(groupBy(prd_key),",
-						"     each(match(name != 'prd_key'), $$ = first($$))) ~> aggregate1",
+						"     each(match(name!='prd_key'), $$ = first($$))) ~> aggregate1",
 						"aggregate1 derive(prd_key = substring(prd_key, 7, length(prd_key) - 5)) ~> derivedColumn1",
 						"derivedColumn1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
@@ -2004,6 +2056,138 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/silver_sql_productos_completos')]",
 				"[concat(variables('factoryId'), '/datasets/gold_sql_dim_producto')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/gold_df_hechos_ventas')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "GOLD"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "gold_sql_dim_cliente",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						},
+						{
+							"dataset": {
+								"referenceName": "gold_sql_dim_producto",
+								"type": "DatasetReference"
+							},
+							"name": "source2"
+						},
+						{
+							"dataset": {
+								"referenceName": "bronze_sql_detalle_ventas",
+								"type": "DatasetReference"
+							},
+							"name": "source3"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "gold_sql_hechos_ventas",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "join1"
+						},
+						{
+							"name": "join2"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          cst_id as integer,",
+						"          nombre_completo as string,",
+						"          pais as string,",
+						"          estado_civil as string,",
+						"          genero as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source1",
+						"source(output(",
+						"          prd_id as string,",
+						"          nombre as string,",
+						"          categoria as string,",
+						"          subcategoria as string,",
+						"          requiere_mantenimiento as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source2",
+						"source(output(",
+						"          sls_ord_num as string,",
+						"          sls_prd_key as string,",
+						"          sls_cust_id as integer,",
+						"          sls_order_dt as string,",
+						"          sls_ship_dt as string,",
+						"          sls_sales as decimal(18,0),",
+						"          sls_quantity as integer,",
+						"          sls_price as decimal(18,0)",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source3",
+						"source1, source3 join(cst_id == sls_cust_id,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join1",
+						"join1, source2 join(sls_prd_key == prd_id,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join2",
+						"join2 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          id as integer,",
+						"          cliente_id as integer,",
+						"          producto_id as string,",
+						"          cantidad as integer,",
+						"          precio_unitario as decimal(18,0),",
+						"          total_venta as decimal(18,0)",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          cliente_id = cst_id,",
+						"          producto_id = sls_prd_key,",
+						"          cantidad = sls_quantity,",
+						"          precio_unitario = sls_price,",
+						"          total_venta = sls_sales",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/gold_sql_dim_cliente')]",
+				"[concat(variables('factoryId'), '/datasets/gold_sql_dim_producto')]",
+				"[concat(variables('factoryId'), '/datasets/bronze_sql_detalle_ventas')]",
+				"[concat(variables('factoryId'), '/datasets/gold_sql_hechos_ventas')]"
 			]
 		},
 		{
@@ -2268,147 +2452,91 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/gold_df_hechos_ventas')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "GOLD"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "gold_sql_dim_cliente",
-								"type": "DatasetReference"
-							},
-							"name": "source1"
-						},
-						{
-							"dataset": {
-								"referenceName": "gold_sql_dim_producto",
-								"type": "DatasetReference"
-							},
-							"name": "source2"
-						},
-						{
-							"dataset": {
-								"referenceName": "bronze_sql_detalle_ventas",
-								"type": "DatasetReference"
-							},
-							"name": "source3"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "gold_sql_hechos_ventas",
-								"type": "DatasetReference"
-							},
-							"name": "sink1"
-						}
-					],
-					"transformations": [
-						{
-							"name": "join1"
-						},
-						{
-							"name": "join2"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          cst_id as integer,",
-						"          nombre_completo as string,",
-						"          pais as string,",
-						"          estado_civil as string,",
-						"          genero as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> source1",
-						"source(output(",
-						"          prd_id as string,",
-						"          nombre as string,",
-						"          categoria as string,",
-						"          subcategoria as string,",
-						"          requiere_mantenimiento as boolean",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> source2",
-						"source(output(",
-						"          sls_ord_num as string,",
-						"          sls_prd_key as string,",
-						"          sls_cust_id as integer,",
-						"          sls_order_dt as string,",
-						"          sls_ship_dt as string,",
-						"          sls_sales as decimal(18,0),",
-						"          sls_quantity as integer,",
-						"          sls_price as decimal(18,0)",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> source3",
-						"source1, source3 join(cst_id == sls_cust_id,",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> join1",
-						"join1, source2 join(sls_prd_key == prd_id,",
-						"     joinType:'inner',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> join2",
-						"join2 sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          id as integer,",
-						"          cliente_id as integer,",
-						"          producto_id as string,",
-						"          cantidad as integer,",
-						"          precio_unitario as decimal(18,0),",
-						"          total_venta as decimal(18,0)",
-						"     ),",
-						"     deletable:false,",
-						"     insertable:true,",
-						"     updateable:false,",
-						"     upsertable:false,",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError',",
-						"     mapColumn(",
-						"          cliente_id = cst_id,",
-						"          producto_id = sls_prd_key,",
-						"          cantidad = sls_quantity,",
-						"          precio_unitario = sls_price,",
-						"          total_venta = sls_sales",
-						"     )) ~> sink1"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/gold_sql_dim_cliente')]",
-				"[concat(variables('factoryId'), '/datasets/gold_sql_dim_producto')]",
-				"[concat(variables('factoryId'), '/datasets/bronze_sql_detalle_ventas')]",
-				"[concat(variables('factoryId'), '/datasets/gold_sql_hechos_ventas')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/GOLD_PL_HECHOS_VENTAS')]",
+			"name": "[concat(parameters('factoryName'), '/GOLD_ETL')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "gold_df_hechos_ventas",
+						"name": "gold_df_dim_cliente",
 						"type": "ExecuteDataFlow",
 						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "gold_df_dim_cliente",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continueOnError": true
+						}
+					},
+					{
+						"name": "gold_df_dim_producto",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "gold_df_dim_cliente",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "gold_df_dim_producto",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continueOnError": true
+						}
+					},
+					{
+						"name": "gold_df_hechos_ventas",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "gold_df_dim_producto",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -2427,8 +2555,7 @@
 									"source2": {},
 									"source3": {},
 									"sink1": {}
-								},
-								"linkedServiceParameters": {}
+								}
 							},
 							"staging": {},
 							"compute": {
@@ -2449,6 +2576,8 @@
 				"annotations": []
 			},
 			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/gold_df_dim_cliente')]",
+				"[concat(variables('factoryId'), '/dataflows/gold_df_dim_producto')]",
 				"[concat(variables('factoryId'), '/dataflows/gold_df_hechos_ventas')]"
 			]
 		}
