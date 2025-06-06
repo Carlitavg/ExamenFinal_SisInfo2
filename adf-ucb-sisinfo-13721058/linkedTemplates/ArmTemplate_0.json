@@ -68,62 +68,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/clientes_csv')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "store_sales",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "BRONZE"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"fileName": "clientes.csv",
-						"container": "store-sales"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "cst_id",
-						"type": "String"
-					},
-					{
-						"name": "cst_key",
-						"type": "String"
-					},
-					{
-						"name": "cst_firstname",
-						"type": "String"
-					},
-					{
-						"name": "cst_lastname",
-						"type": "String"
-					},
-					{
-						"name": "cst_marital_status",
-						"type": "String"
-					},
-					{
-						"name": "cst_gndr",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/store_sales')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/bronze_sql_clientes')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -244,6 +188,69 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/bronze_sql_detalle_ventas')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "sql_dw_store_sales",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "BRONZE"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "sls_ord_num",
+						"type": "varchar"
+					},
+					{
+						"name": "sls_prd_key",
+						"type": "varchar"
+					},
+					{
+						"name": "sls_cust_id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "sls_order_dt",
+						"type": "varchar"
+					},
+					{
+						"name": "sls_ship_dt",
+						"type": "varchar"
+					},
+					{
+						"name": "sls_sales",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 0
+					},
+					{
+						"name": "sls_quantity",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "sls_price",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 0
+					}
+				],
+				"typeProperties": {
+					"schema": "BRONZE",
+					"table": "DETALLE_VENTAS"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/sql_dw_store_sales')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/bronze_sql_productos')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -333,66 +340,288 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/bronze_sql_detalle_ventas')]",
+			"name": "[concat(parameters('factoryName'), '/clientes_bd_csv')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "sql_dw_store_sales",
+					"referenceName": "store_sales",
 					"type": "LinkedServiceReference"
 				},
 				"folder": {
 					"name": "BRONZE"
 				},
 				"annotations": [],
-				"type": "AzureSqlTable",
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "clientes_bd_gen.csv",
+						"container": "store-sales"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "CID",
+						"type": "String"
+					},
+					{
+						"name": "BDATE",
+						"type": "String"
+					},
+					{
+						"name": "GEN",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/store_sales')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/clientes_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "store_sales",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "BRONZE"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "clientes.csv",
+						"container": "store-sales"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "cst_id",
+						"type": "String"
+					},
+					{
+						"name": "cst_key",
+						"type": "String"
+					},
+					{
+						"name": "cst_firstname",
+						"type": "String"
+					},
+					{
+						"name": "cst_lastname",
+						"type": "String"
+					},
+					{
+						"name": "cst_marital_status",
+						"type": "String"
+					},
+					{
+						"name": "cst_gndr",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/store_sales')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/clientes_loc_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "store_sales",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "BRONZE"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "clientes_location.csv",
+						"container": "store-sales"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "CID",
+						"type": "String"
+					},
+					{
+						"name": "CNTRY",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/store_sales')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/detalle_ventas_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "store_sales",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "BRONZE"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "detalle_ventas.csv",
+						"container": "store-sales"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
 				"schema": [
 					{
 						"name": "sls_ord_num",
-						"type": "varchar"
+						"type": "String"
 					},
 					{
 						"name": "sls_prd_key",
-						"type": "varchar"
+						"type": "String"
 					},
 					{
 						"name": "sls_cust_id",
-						"type": "int",
-						"precision": 10
+						"type": "String"
 					},
 					{
 						"name": "sls_order_dt",
-						"type": "varchar"
+						"type": "String"
 					},
 					{
 						"name": "sls_ship_dt",
-						"type": "varchar"
+						"type": "String"
 					},
 					{
 						"name": "sls_sales",
-						"type": "decimal",
-						"precision": 18,
-						"scale": 0
+						"type": "String"
 					},
 					{
 						"name": "sls_quantity",
-						"type": "int",
-						"precision": 10
+						"type": "String"
 					},
 					{
 						"name": "sls_price",
-						"type": "decimal",
-						"precision": 18,
-						"scale": 0
+						"type": "String"
 					}
-				],
-				"typeProperties": {
-					"schema": "BRONZE",
-					"table": "DETALLE_VENTAS"
-				}
+				]
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/sql_dw_store_sales')]"
+				"[concat(variables('factoryId'), '/linkedServices/store_sales')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/productos_cat_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "store_sales",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "BRONZE"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/store_sales')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/productos_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "store_sales",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "BRONZE"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "productos.csv",
+						"container": "store-sales"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "prd_id",
+						"type": "String"
+					},
+					{
+						"name": "prd_key",
+						"type": "String"
+					},
+					{
+						"name": "prd_nm",
+						"type": "String"
+					},
+					{
+						"name": "prd_cost",
+						"type": "String"
+					},
+					{
+						"name": "prd_line",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/store_sales')]"
 			]
 		}
 	]
