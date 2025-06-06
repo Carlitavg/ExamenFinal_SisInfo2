@@ -1,6 +1,9 @@
 {
 	"name": "silver_df_productos_completos",
 	"properties": {
+		"folder": {
+			"name": "SILVER"
+		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [
