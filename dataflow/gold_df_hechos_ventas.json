@@ -29,8 +29,26 @@
 					"name": "source3"
 				}
 			],
-			"sinks": [],
-			"transformations": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "gold_sql_hechos_ventas",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "join1"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "join2"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
 				"          cst_id as integer,",
@@ -67,7 +85,43 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
-				"     format: 'table') ~> source3"
+				"     format: 'table') ~> source3",
+				"source1, source3 join(cst_id == sls_cust_id,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join1",
+				"source2 derive(prd_id_new = substring(prd_id, 7, length(prd_id) - 5)) ~> derivedColumn1",
+				"join1, derivedColumn1 join(sls_prd_key == prd_id_new,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join2",
+				"join2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          id as integer,",
+				"          cliente_id as integer,",
+				"          producto_id as string,",
+				"          cantidad as integer,",
+				"          precio_unitario as decimal(18,0),",
+				"          total_venta as decimal(18,0)",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          cliente_id = cst_id,",
+				"          producto_id = sls_prd_key,",
+				"          cantidad = sls_quantity,",
+				"          precio_unitario = sls_price,",
+				"          total_venta = sls_sales",
+				"     )) ~> sink1"
 			]
 		}
 	}

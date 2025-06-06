@@ -17,10 +17,6 @@
 				"precision": 10
 			},
 			{
-				"name": "fecha",
-				"type": "date"
-			},
-			{
 				"name": "cliente_id",
 				"type": "int",
 				"precision": 10
