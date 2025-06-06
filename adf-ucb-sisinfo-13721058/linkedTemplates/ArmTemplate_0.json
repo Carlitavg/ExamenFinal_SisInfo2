@@ -606,8 +606,7 @@
 				"schema": [
 					{
 						"name": "prd_id",
-						"type": "int",
-						"precision": 10
+						"type": "varchar"
 					},
 					{
 						"name": "nombre",
@@ -656,18 +655,13 @@
 						"precision": 10
 					},
 					{
-						"name": "fecha",
-						"type": "date"
-					},
-					{
 						"name": "cliente_id",
 						"type": "int",
 						"precision": 10
 					},
 					{
 						"name": "producto_id",
-						"type": "int",
-						"precision": 10
+						"type": "varchar"
 					},
 					{
 						"name": "cantidad",
